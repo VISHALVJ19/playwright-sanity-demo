@@ -38,7 +38,7 @@ http://localhost:3100 (practice users are in `practice-app/seed-data.js`).
 
 Workflow: `.github/workflows/playwright.yml`
 
-- Triggers: push to `main`, pull request to `main`, manual run (`workflow_dispatch`), and a daily schedule.
+- Triggers: push to `main`, pull request to `main`, and manual run (`workflow_dispatch`).
 - Steps: checkout → Node 24 → `npm ci` → install Chromium → `npm run test:sanity` → job summary → upload artifacts.
 - If any test fails, the job is **red**. The summary and artifacts are still published (`if: always()`).
 
