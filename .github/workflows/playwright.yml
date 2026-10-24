@@ -67,3 +67,19 @@ jobs:
             reports/
           retention-days: 14
           if-no-files-found: warn
+
+      # Runs last so the run link already has the artifacts. A channel without its
+      # secrets is skipped; a send error is a warning and never changes the job result.
+      - name: Send email and Teams notification
+        if: always()
+        run: node scripts/notify.js reports/results.json
+        env:
+          JOB_STATUS: ${{ job.status }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
