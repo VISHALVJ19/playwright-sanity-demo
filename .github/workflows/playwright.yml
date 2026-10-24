@@ -3,9 +3,13 @@ name: Playwright Sanity Tests
 on:
   push:
     branches: [main]
+  # Validate changes before they reach main (PR from a feature branch).
+  pull_request:
+    branches: [main]
   workflow_dispatch:
-  schedule:
-    - cron: '30 3 * * *'
+
+permissions:
+  contents: read
 
 jobs:
   sanity-tests:
@@ -19,7 +23,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
@@ -28,8 +32,21 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
+      # Fails the job if any mandatory test fails. Later steps use if: always()
+      # so the summary and reports are still published.
       - name: Run sanity tests
         run: npm run test:sanity
+        env:
+          # Optional: set these in Settings > Secrets and variables > Actions.
+          # When empty, tests fall back to the public demo / practice seed users.
+          APP_USER: ${{ secrets.APP_USER }}
+          APP_PASS: ${{ secrets.APP_PASS }}
+          SAN_USER: ${{ secrets.SAN_USER }}
+          SAN_PASS: ${{ secrets.SAN_PASS }}
+
+      - name: Publish job summary
+        if: always()
+        run: node scripts/ci-summary.js reports/results.json >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload HTML report
         if: always()
@@ -38,3 +55,15 @@ jobs:
           name: playwright-report-${{ github.run_number }}
           path: playwright-report/
           retention-days: 14
+          if-no-files-found: warn
+
+      - name: Upload test evidence (screenshots, traces, videos, JSON)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-evidence-${{ github.run_number }}
+          path: |
+            test-results/
+            reports/
+          retention-days: 14
+          if-no-files-found: warn
