@@ -65,6 +65,33 @@ Open a trace with `npx playwright show-trace path\to\trace.zip`.
 In CI, add values under **Settings → Secrets and variables → Actions → New repository secret**.
 Never write real passwords, tokens or company URLs in YAML or source files.
 
+## Email and Microsoft Teams notifications
+
+After every CI run, `scripts/notify.js` sends the result (pass/fail, counts, SAN-001..017 status,
+failed test errors and a link to the run) to email and Teams. The email also attaches the HTML report.
+A channel is skipped when its secrets are missing, and a send error only shows as a warning:
+the job result always comes from the tests.
+
+| Secret | Example | Notes |
+|---|---|---|
+| `SMTP_HOST` | `smtp.gmail.com` | Your mail provider's SMTP server |
+| `SMTP_PORT` | `587` | 587 (STARTTLS) or 465 (TLS). Default 587 |
+| `SMTP_USER` | `you@gmail.com` | Sender account |
+| `SMTP_PASS` | Gmail **App Password** | Never your normal password. Gmail needs 2-Step Verification on, then Google Account → Security → App passwords |
+| `MAIL_TO` | `a@x.com,b@x.com` | Comma-separated recipients |
+| `MAIL_FROM` | `Sanity Bot <you@gmail.com>` | Optional, defaults to `SMTP_USER` |
+| `TEAMS_WEBHOOK_URL` | `https://...` | From a Teams **Workflows** webhook (see below). Treat it like a password |
+
+Teams webhook: in the Teams channel → **⋯ → Workflows** → template
+**"Post to a channel when a webhook request is received"** → choose team and channel → copy the URL.
+(The old "Incoming Webhook" connector is being retired by Microsoft, so use Workflows.)
+
+Preview locally without sending anything:
+
+```powershell
+$env:NOTIFY_DRY_RUN = '1'; node scripts/notify.js; Remove-Item Env:NOTIFY_DRY_RUN
+```
+
 ## Mandatory scenario mapping
 
 | ID | Scenario | Test file | Safety note |
