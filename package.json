@@ -6,6 +6,8 @@
   "scripts": {
     "test": "playwright test",
     "test:sanity": "playwright test --grep @sanity",
+    "test:mandatory": "playwright test --project=practice-app --grep @mandatory",
+    "start:practice-app": "node practice-app/server.js",
     "report": "playwright show-report"
   },
   "keywords": [],
